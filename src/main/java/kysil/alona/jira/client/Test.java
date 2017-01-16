@@ -78,8 +78,8 @@ public class Test {
         		
         		ArrayList<MenuItemWrapper> selectConnectionTypeMenu = new ArrayList<MenuItemWrapper>();
     			selectConnectionTypeMenu.add(new MenuItemWrapper(1, "JRJC"));
-    			selectConnectionTypeMenu.add(new MenuItemWrapper(2, "REST"));
-    			connectionType = (int) Utils.collectMenuInput("Please select connection type from listed below:", selectConnectionTypeMenu);
+    			selectConnectionTypeMenu.add(new MenuItemWrapper(2, "custom REST"));
+    			connectionType = (Integer) Utils.collectMenuInput("Please select connection type from listed below:", selectConnectionTypeMenu);
     			System.out.println("Connecting...");
     			if (1 == connectionType) {
     				final AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
@@ -127,7 +127,7 @@ public class Test {
 
 			try {
 				while (true) {				
-					int handlerNum = (int) Utils.collectMenuInput("Please select action from listed below:", menu);
+					int handlerNum = (Integer) Utils.collectMenuInput("Please select action from listed below:", menu);
 					handlers.get(handlerNum - 1).handle();
 					System.out.println("-----------\n");
 				}
