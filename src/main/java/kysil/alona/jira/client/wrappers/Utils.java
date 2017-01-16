@@ -24,8 +24,7 @@ public class Utils {
 	        enteredNumber = sc.nextInt();
 	        
 	    } while (enteredNumber < 1 || enteredNumber > items.size());
-	    System.out.println(enteredNumber);
-		return items.get(enteredNumber - 1).getId();        
+	    return items.get(enteredNumber - 1).getId();        
 	}
 
 }
