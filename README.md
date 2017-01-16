@@ -58,7 +58,7 @@ test description
 Wait please...  
 New issue has been created successfully!  
 New issue key is TT-41  
------------  
+
   
 Please select action from listed below:  
 1 - Get all issues  
