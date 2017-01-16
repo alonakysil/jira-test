@@ -42,7 +42,6 @@ public class Test {
 		    defaultPassword = configRead.getString("password");
 		    completeConfiguration = true;
 		} catch (ConfigurationException e1) {
-			e1.printStackTrace();
 			System.out.println("Unable to read default settings!");
 		}
        
