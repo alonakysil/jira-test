@@ -15,10 +15,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.XMLConfiguration;
 
 public class Test {
 
@@ -29,78 +26,56 @@ public class Test {
 	
 	public static void main(String[] args) throws IOException, InterruptedException {		
         BufferedReader br = null;
-        XMLConfiguration configRead = null;
-        boolean completeConfiguration = false;
-        String defaultUrl = null;
-	    String defaultUsername = null;
-	    String defaultPassword = null;
-	    int connectionType;
-		try {
-			configRead = new XMLConfiguration("conf.xml");
-			defaultUrl = configRead.getString("url");
-		    defaultUsername = configRead.getString("username");
-		    defaultPassword = configRead.getString("password");
-		    completeConfiguration = true;
-		} catch (ConfigurationException e1) {
-			System.out.println("Unable to read default settings!");
-		}
-       
-        
+        int connectionType;       
+        Configuration configuration = new Configuration("conf.xml");
         try {
             br = new BufferedReader(new InputStreamReader(System.in));
-            String leaveEmpty = completeConfiguration ?  " (leave it empty to use DEFAULT)!" : "!";
-            System.out.println("Welcome to Jira REST client!\nPlease enter your Jira server URL and credentials" 
-            					+ leaveEmpty);
+            System.out.println("Welcome to Jira REST client!");
+           boolean wrongCredentials = false; 
+            
             while(true) {
-            	System.out.println("URL:");
-				
-        		String url = br.readLine();
-        		URI jiraServerUri;
-    			if (null != url && !url.isEmpty()) {
-        			jiraServerUri = URI.create(url);
-        		} else {
-        			jiraServerUri = URI.create(defaultUrl);
-        		}
-        		
-        		System.out.println("Username:");
-        		String username = br.readLine();
-        		if (null == username || username.isEmpty()) {
-        			username = defaultUsername;
-        		} 
-        		
-        		System.out.println("Password:");
-        		String password = br.readLine();
-        		if (null == password || password.isEmpty()) {
-        			password = defaultPassword;
-        		} 
-        		//TODO select con type
-        		
+            	URI jiraServerUri;
+            	String username;
+            	String password;
+            	
+            	if (wrongCredentials || !configuration.isConfigurationFull()) {
+					System.out.println("Please enter your Jira server URL and credentials");
+
+					System.out.println("URL:");
+					String url = br.readLine();
+					jiraServerUri = URI.create(url);
+
+					System.out.println("Username:");
+					username = br.readLine();
+
+					System.out.println("Password:");
+					password = br.readLine();
+                } else {
+                	jiraServerUri = URI.create(configuration.getUrl());
+                	username = configuration.getUsername();
+                	password = configuration.getPassword();
+                }
+            	
         		ArrayList<MenuItemWrapper> selectConnectionTypeMenu = new ArrayList<MenuItemWrapper>();
     			selectConnectionTypeMenu.add(new MenuItemWrapper(1, "JRJC"));
     			selectConnectionTypeMenu.add(new MenuItemWrapper(2, "custom REST"));
     			connectionType = (Integer) Utils.collectMenuInput("Please select connection type from listed below:", selectConnectionTypeMenu);
     			System.out.println("Connecting...");
-    			if (1 == connectionType) {
-    				final AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-            		restClient = factory.createWithBasicHttpAuthentication(jiraServerUri, username, password);
-            		try {
-            			restClient.getSessionClient().getCurrentSession().claim();
-            			break;
-            		}catch (Exception e) {
-            			System.out.println("Bad data. Try again please.");
-            			continue;
-            		} 
-    			} else { 
-    				try { 
-            			client = new RESTClient(jiraServerUri.getHost(), username, password);
-            			break;
-            		}catch (Exception e) {
-            			System.out.println("Bad data. Try again please.");
-            			continue;
-            		}
-            			
-    			}
-        		
+				try {
+					if (1 == connectionType) {
+						final AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
+						restClient = factory.createWithBasicHttpAuthentication(jiraServerUri, username, password);
+						restClient.getSessionClient().getCurrentSession().claim();
+					} else {
+						client = new RESTClient(jiraServerUri.getHost(), username, password);
+					}
+					wrongCredentials = false;
+					break;
+				} catch (Exception e) {
+					wrongCredentials = true;
+					System.out.println("Wrong credentials or site URL. Try again please.");
+					continue;
+				}
             }
             
             ArrayList<Handler> handlers = new ArrayList<Handler>();
