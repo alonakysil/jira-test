@@ -25,7 +25,7 @@ public class RESTClient {
     private String baseURL;
     private String cookie;
     
-    public RESTClient(String baseURL, String login, String password) {
+    public RESTClient(String baseURL, String login, String password) throws Exception {
         super();
         this.setBaseURL(baseURL);
         this.setLogin(login);
@@ -67,7 +67,7 @@ public class RESTClient {
         return password;
     }
 
-    private String login() {
+    private String login() throws Exception {
         String cookie = "";
         URLConnection urlConnection;
         try {
@@ -85,58 +85,39 @@ public class RESTClient {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Content-Length", String.valueOf(data.length()));
             conn.getOutputStream().write(data.getBytes());
-            
-            try {
-                int status = conn.getResponseCode();
-                InputStream inputStream;
-                List<HttpCookie> cookies = HttpCookie.parse(conn.getHeaderField("Set-Cookie"));
-                if (status == 400) {
-                    inputStream = conn.getErrorStream();
-                } else {
-                    inputStream = conn.getInputStream();
-                }
-                BufferedReader br = null;
-                StringBuilder sb = new StringBuilder();
 
-                String line;
-                try {
+			int status = conn.getResponseCode();
+			InputStream inputStream;
+			if (status == 400) {
+				inputStream = conn.getErrorStream();
+			} else {
+				inputStream = conn.getInputStream();
+			}
+			BufferedReader br = null;
+			StringBuilder sb = new StringBuilder();
 
-                    br = new BufferedReader(new InputStreamReader(inputStream));
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line);
-                    }
+			String line;
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if (br != null) {
-                        try {
-                            br.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
+			br = new BufferedReader(new InputStreamReader(inputStream));
+			while ((line = br.readLine()) != null) {
+				sb.append(line);
+			}
 
-                JsonReader jsonReader = Json.createReader(new StringReader(sb.toString()));
-                JsonObject object = jsonReader.readObject();
-                jsonReader.close();
-                HttpCookie sessionCookie = null;
-                for (HttpCookie httpCookie : cookies) {
-                    if(httpCookie.getName().equals(((JsonObject)object.get("session")).getString("name"))) {
-                        sessionCookie = httpCookie;
-                        break;
-                    }
-                }
-                cookie = sessionCookie.getName() + "=" + sessionCookie.getValue();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
+			JsonReader jsonReader = Json.createReader(new StringReader(sb.toString()));
+			JsonObject object = jsonReader.readObject();
+			jsonReader.close();
+			HttpCookie sessionCookie = null;
+			List<HttpCookie> cookies = HttpCookie.parse(conn.getHeaderField("Set-Cookie"));
+			for (HttpCookie httpCookie : cookies) {
+				if (httpCookie.getName().equals(((JsonObject) object.get("session")).getString("name"))) {
+					sessionCookie = httpCookie;
+					break;
+				}
+			}
+			cookie = sessionCookie.getName() + "=" + sessionCookie.getValue();
+		
+        } catch (Exception e) {
+            throw e;
         }
         return cookie;
     }
